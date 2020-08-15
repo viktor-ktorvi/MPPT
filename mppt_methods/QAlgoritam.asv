@@ -102,7 +102,14 @@ function [output, Qq] = QAlgoritam(V, I, epsilon)
     end
     
 %% Clamping 
-    output = clamp(output, duty_min, duty_max);
+    if output > duty_max
+     output=duty_max;
+    else
+        if output<duty_min
+            output=duty_min;
+        end
+    end
+    
     
 %% Saving old values
     prev_current_index = current_index;
