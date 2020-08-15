@@ -1,34 +1,21 @@
-function [output, Qq] = QAlgoritam(V, I, epsilon)
+function [output] = QAlgoritam(V, I, epsilon, parameters)
 %% Constants
+    duty_min = parameters.duty_min;
+    duty_max = parameters.duty_max;
+    duty_init = parameters.duty_init;
     
-    duty_min=0.28; % za oko 0.27 duty je Vin vece od Voc za 6V Vout, jer Vout = D*Vin;
-    duty_max=1.0;
+    Voc = parameters.Voc;
+    Isc = parameters.Isc;
+
+    N = parameters.N; 
+
+    wp = parameters.wp;
+    wn = parameters.wn;
     
-    Voc = 21.9;
-    Isc = 1.84;
+    alpha = parameters.alpha;
+    gamma = parameters.gamma;
+    actions = parameters.actions;
     
-    duty_init=0.5;
-
-    N = 10; % broj tacaka za diskretizsaciju stanja
-    % mozda je malo pa ne hvata sistem lepo
-    % mozda je mnogo pa ne uspeva da istrenira
-
-    % dsp limit
-    min_step = 0.0025;
-    big_step = 3*min_step;
-
-    % positive reward coef
-    wp = 1;
-    % negative reward coef
-    wn = 4;
-    
-    % learning rate
-    alpha = 0.5;
-    % discount facor
-    gamma = 0.9;
-
-    % actions
-    actions = [ -big_step, 0, big_step];
 %% Initializing
 
     persistent Vold Pold Iold duty_old Q prev_action_index prev_current_index prev_voltage_index prev_deg_index;
