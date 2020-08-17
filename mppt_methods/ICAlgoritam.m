@@ -1,7 +1,7 @@
 function output = ICAlgoritam(V, I)
 
    
-duty_init=0.3;
+duty_init=0.5;
 duty_min=0.0;
 duty_max=1.0;
 

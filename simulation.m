@@ -6,7 +6,9 @@ sim_file_name = 'mppt';
 open_system(sim_file_name);
 
 %% Parameters 
-parameters.sim_duration = 0.03;
+% umesto ovoga mozda proslediti function handle
+parameters.mppt_method = 0; % 1 za IC , 0 za Q, ne da string da prosledim
+parameters.sim_duration = 0.2;
 parameters.transport_delay = 0;
 
 parameters.duty_min=0.28; % za oko 0.27 duty je Vin vece od Voc za 6V Vout, jer Vout = D*Vin;
@@ -16,7 +18,7 @@ parameters.duty_init=0.5;
 parameters.Voc = 21.9;
 parameters.Isc = 1.84;
 
-parameters.N = 15;     % number of points for discretization of I and V
+parameters.N = 20;     % number of points for discretization of I and V
 
 parameters.min_step = 0.0025;    % dsp limit
 parameters.big_step = 3*parameters.min_step;
@@ -24,7 +26,7 @@ parameters.big_step = 3*parameters.min_step;
 parameters.wp = 1;    % positive reward coef
 parameters.wn = 4;    % negative reward coef
 
-parameters.alpha = 0.2;    % learning rate
+parameters.alpha = 0.5;    % learning rate
 parameters.gamma = 0.9;    % discount facor
 
 parameters.actions = [ -parameters.min_step, 0, parameters.min_step];    % actions
@@ -60,3 +62,5 @@ modify_excel_columns(complete_path + folder_path + excel_file_name + excel_exten
 time_series_name = "output";
 time_series_extension = ".mat";
 save(folder_path + time_series_name + time_series_extension,'time_series')
+
+

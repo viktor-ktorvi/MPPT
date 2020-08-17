@@ -108,6 +108,7 @@ function [output, steady_state_flag] = QAlgoritam(V, I, epsilon, parameters)
         steady_state_flag = 0;
     end
     
+    % STVARNO NE ZNAM DA L JE BOLJE S OVIM ILI BEZ
     % if something changed reset everything
     if prev_steady_state_flag == 1 && steady_state_flag == 0
 
