@@ -16,9 +16,11 @@ function [output, steady_state_flag] = QAlgoritam(V, I, epsilon, parameters)
     gamma = parameters.gamma;
     actions = parameters.actions;
     
+    explore_number = parameters.explore_number;
+    
 %% Initializing
 
-    persistent Vold Pold Iold duty_old Q prev_action_index prev_current_index prev_voltage_index prev_deg_index consecutive_zero_actions prev_steady_state_flag;
+    persistent Vold Pold Iold duty_old Q prev_action_index prev_current_index prev_voltage_index prev_deg_index consecutive_zero_actions prev_steady_state_flag explored_checklist;
     
     if isempty(Vold)
         Vold=0;
@@ -33,13 +35,16 @@ function [output, steady_state_flag] = QAlgoritam(V, I, epsilon, parameters)
 
         % N x I, N x V , 2 x Deg, length(actions) x actions
         Q = zeros(N, N, 2, length(actions)); 
+        explored_checklist = zeros(N, N, 2);
         
         consecutive_zero_actions = 0;
         prev_steady_state_flag = 0;
         
+        
     end  
     
     % clamping
+    % s_prim observed after action a was applied
     I = clamp(I, 0, Isc);
     V = clamp(V, 0, Voc);
     
@@ -49,6 +54,7 @@ function [output, steady_state_flag] = QAlgoritam(V, I, epsilon, parameters)
     dP = P - Pold;
     
 %% Calculating reward
+    % r_prim calculated after action a was applied
     if dP < 0
         reward = wn * dP;
     else
@@ -67,26 +73,50 @@ function [output, steady_state_flag] = QAlgoritam(V, I, epsilon, parameters)
     end
 
 %% Q learning
-    % update
-    Q(prev_current_index, prev_voltage_index, prev_deg_index, prev_action_index) = (1 - alpha) .* Q(prev_current_index, prev_voltage_index, prev_deg_index, prev_action_index) + alpha .* (reward + gamma * max(Q(current_index, voltage_index, Deg_index, :)));
+
+    % previous state (I, V, Deg) and action a 
+    Q_prev = Q(prev_current_index, prev_voltage_index, prev_deg_index, prev_action_index);
     
-    % best move
-    max_val = max(Q(current_index, voltage_index, Deg_index, :));
+    % s_prim with all possible actions b
+    Q_prim = Q(current_index, voltage_index, Deg_index, :);
     
-    % if multiple best moves choose random one
-    max_indexes = find(Q(current_index, voltage_index, Deg_index, :) == max_val);
-    random_index = randi(length(max_indexes));
+    % update 
+    Q_prev = Q_prev + alpha * (reward + gamma * max(Q_prim) - Q_prev);
     
-    output = duty_old + actions(max_indexes(random_index));
+    Q(prev_current_index, prev_voltage_index, prev_deg_index, prev_action_index) = Q_prev;
     
-    prev_action_index = max_indexes(random_index);
+    % if state hasn't been explored before properly
+    if explored_checklist(current_index, voltage_index, Deg_index) < explore_number
+        
+        % take random action
+        random_action_index = randi(length(actions));
+        output = duty_old + actions(random_action_index);
+        prev_action_index = random_action_index;
+        explored_checklist(current_index, voltage_index, Deg_index) = explored_checklist(current_index, voltage_index, Deg_index) + 1;
+        
+        
+    % if state has been fully explored
+    else
+        % follow the optimal policy
+        % best move
+        max_val = max(Q(current_index, voltage_index, Deg_index, :));
+
+        % if multiple best moves choose random one
+        max_indexes = find(Q(current_index, voltage_index, Deg_index, :) == max_val);
+        random_index = randi(length(max_indexes));
+
+        output = duty_old + actions(max_indexes(random_index));
+
+        prev_action_index = max_indexes(random_index); 
+    end
+    
     
     % exploration
-    if rand() < epsilon
-        random_index = randi(length(actions));
-        output = duty_old + actions(random_index);
-        prev_action_index = random_index;
-    end
+%     if rand() < epsilon
+%         random_index = randi(length(actions));
+%         output = duty_old + actions(random_index);
+%         prev_action_index = random_index;
+%     end
     
 %% Checking for steady state
     if consecutive_zero_actions == 0
@@ -110,13 +140,14 @@ function [output, steady_state_flag] = QAlgoritam(V, I, epsilon, parameters)
     
     % STVARNO NE ZNAM DA L JE BOLJE S OVIM ILI BEZ
     % if something changed reset everything
-    if prev_steady_state_flag == 1 && steady_state_flag == 0
-
-        % N x I, N x V , 2 x Deg, length(actions) x actions
-        Q = zeros(N, N, 2, length(actions)); 
-        prev_action_index =  floor(length(actions)/2) + 1;   % 0 action
-        consecutive_zero_actions = 0;
-    end
+%     if prev_steady_state_flag == 1 && steady_state_flag == 0
+% 
+%         % N x I, N x V , 2 x Deg, length(actions) x actions
+%         Q = zeros(N, N, 2, length(actions)); 
+%         explored_checklist = zeros(N, N, 2);
+%         prev_action_index =  floor(length(actions)/2) + 1;   % 0 action
+%         consecutive_zero_actions = 0;
+%     end
     
 %% Clamping 
     output = clamp(output, duty_min, duty_max);
