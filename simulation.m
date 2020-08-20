@@ -44,6 +44,12 @@ power = [15.19 15.19 29.92 29.92 9.07 9.07 12.14 12.14 29.92 29.92 15.19 15.19];
 out = sim(sim_file_name);
 
 %% Create folder
+
+% this if statement has not been tested, i literaly wrote it up 
+% in notepad because i was lazy, if it doesnt work comment it out % but make sure you have a folder named data
+if ~exist('data', 'dir')
+       mkdir('data')
+    end
 initial_path = "data/";
 
 if parameters.mppt_method == 0
