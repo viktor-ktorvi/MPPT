@@ -1,4 +1,4 @@
-function [output, steady_state_flag] = QAlgoritam(V, I, epsilon, parameters)
+function [output, steady_state_flag] = QAlgoritam(V, I, parameters)
 %% Constants
     duty_min = parameters.duty_min;
     duty_max = parameters.duty_max;
@@ -17,6 +17,8 @@ function [output, steady_state_flag] = QAlgoritam(V, I, epsilon, parameters)
     actions = parameters.actions;
     
     explore_number = parameters.explore_number;
+    
+    epsilon = parameters.epsilon;
     
 %% Initializing
 
@@ -66,6 +68,7 @@ function [output, steady_state_flag] = QAlgoritam(V, I, epsilon, parameters)
     voltage_index = round(map(V,0,Voc,1,N));
     
     Deg = abs(deg(I,V,dI,dV));
+    % maybe 5' is too much and its catching local minima
     if Deg < 5
         Deg_index = 1;
     else
@@ -86,8 +89,8 @@ function [output, steady_state_flag] = QAlgoritam(V, I, epsilon, parameters)
     Q(prev_current_index, prev_voltage_index, prev_deg_index, prev_action_index) = Q_prev;
     
     % if state hasn't been explored before properly
-    if explored_checklist(current_index, voltage_index, Deg_index) < explore_number
-        
+    if explored_checklist(current_index, voltage_index, Deg_index) < explore_number && rand() < epsilon
+        % epsilon probably not needed, set to 0 to ignore
         % take random action
         random_action_index = randi(length(actions));
         output = duty_old + actions(random_action_index);
@@ -138,7 +141,7 @@ function [output, steady_state_flag] = QAlgoritam(V, I, epsilon, parameters)
         steady_state_flag = 0;
     end
     
-    % STVARNO NE ZNAM DA L JE BOLJE S OVIM ILI BEZ
+   
     % if something changed reset everything
 %     if prev_steady_state_flag == 1 && steady_state_flag == 0
 % 
