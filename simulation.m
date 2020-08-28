@@ -5,7 +5,7 @@ clear variables;
 sim_file_name = 'mppt';
 open_system(sim_file_name);
 
-%% Parameters 
+%% Parameters
 parameters.mppt_method = 0; % 1 za IC , 0 za Q, ne da string da prosledim
 
 parameters.sim_duration = 0.5; % sec
@@ -16,7 +16,7 @@ parameters.sampling_time = 1 / parameters.regulation_freq;
 
 parameters.duty_min= 0.31; % za oko 0.27 duty je Vin vece od Voc za 6V Vout, jer Vout = D*Vin; Na <0.3 je negativna snaga
 parameters.duty_max= 1.0;
-parameters.duty_init= 0.35;
+parameters.duty_init= 0.35; % can be random
 
 parameters.Voc = 21.9; % V
 parameters.Isc = 1.84; % A
